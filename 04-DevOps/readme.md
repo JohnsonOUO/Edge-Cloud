@@ -1,4 +1,4 @@
-## Devops
+## DevOps
 we can sepqrate Devops to CD and CI.
 ### CD
 First we must have ArgoCD and gitea. If you miss each one, you can deploy on K8sApp.

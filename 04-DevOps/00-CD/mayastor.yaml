@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mayapool
+  name: mayastor
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,12 +10,13 @@ metadata:
 spec:
   project: system
   source:
-    path: 07-mayastor/Config/basic
+    path: 07-storage-phase/mayastor
     repoURL: http://gitea-http.gitea.svc.cluster.local:3000/root/cloud-system-deployment.git
     targetRevision: HEAD
   destination:
     namespace: mayastor
     server: https://kubernetes.default.svc
+
   syncPolicy:
     automated:
       selfHeal: true

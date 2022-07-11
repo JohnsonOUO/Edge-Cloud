@@ -6,7 +6,6 @@ bash nodeconfig.sh
 ```
 After preparing all config, we can deploy mayastor yaml
 ```
-cd ~/mayastor/
 kubectl apply -k .
 ```
 After deploy mayastor config, we can deploy MSP which is defined by maystor crd.

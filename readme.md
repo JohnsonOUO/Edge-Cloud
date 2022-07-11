@@ -14,13 +14,13 @@ Setting up the config about proxmox environment and node.
 >Open 00-Prepare and follow the readme.
 ### Create Vm
 With terraform, we can build node quickly.
->Open 01-NodesCreate and follow the readme.
+>Open 01-VMCluster and follow the readme.
 ### K8s Infra
 On kubernetes, we need to build network,storage and so on.
 >Open 02-K8sInfra and follow the readme.
 ### K8s Service
 After infra sets up, We can deploy application on kubernetes.
 >Open 03-K8sApp and follow the readme.
-### Devops
+### DevOps
 When all applications are done, we can test CI/CD and know how it works.
->Open 04-Devops and follow the readme.
+>Open 04-DevOps and follow the readme.

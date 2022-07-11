@@ -1,4 +1,4 @@
-# Nodes-Create
+# VMCluster
 we will use terraform to create vm quickly.
 ## Install Terraform
 terraform is the cli.
@@ -17,7 +17,7 @@ we can see Terraform basic information and provider installation
 cd ~/cloud/terraform-proxmox/
 terraform init
 ```
-## Modify
+## Configuration
 we will modify terraform config in main.tf
 ```
 nano ~/cloud/terraform-proxmox/main.tf

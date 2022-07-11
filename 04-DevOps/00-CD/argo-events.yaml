@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: rancher-local-path-sc
+  name: argo-events
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,11 +10,11 @@ metadata:
 spec:
   project: system
   source:
-    path: 08-rancher-local-path-provisioner
+    path: 05-argo-event
     repoURL: http://gitea-http.gitea.svc.cluster.local:3000/root/cloud-system-deployment.git
     targetRevision: HEAD
   destination:
-    namespace: local-path-storage
+    namespace: argo-events
     server: https://kubernetes.default.svc
   syncPolicy:
     automated:
