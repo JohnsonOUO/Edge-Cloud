@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: argocd
+resources:
+- repo-connect.yaml
+- system-project.yaml
+- metallb.yaml
+- nginx.yaml
+- cert-manager.yaml
+- kubed.yaml
+- rancher-local-path.yaml
+- gitea.yaml
+- harbor.yaml
+- velero.yaml
+- mayastor.yaml
+- mayapool.yaml
+- sealed-secret.yaml
+- argocd.yaml
+- argoworkflow.yaml
+- argo-events.yaml
+- certificate-management.yaml
+- secret-management.yaml

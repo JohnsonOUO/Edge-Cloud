@@ -1,0 +1,115 @@
+#global:
+  #storageClass: "mayastor"
+
+## @section Persistence
+#
+## @param persistence.enabled Enable persistent storage
+## @param persistence.existingClaim Use an existing claim to store repository information
+## @param persistence.size Size for persistence to store repo information
+## @param persistence.accessModes AccessMode for persistence
+## @param persistence.labels Labels for the persistence volume claim to be created
+## @param persistence.annotations Annotations for the persistence volume claim to be created
+## @param persistence.storageClass Name of the storage class to use
+## @param persistence.subPath Subdirectory of the volume to mount at
+
+persistence:
+  enabled: true
+  #existingClaim:
+  size: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  #labels: {}
+  #annotations: {}
+  storageClass: maya-stor #local-path #maya-stor
+## @section PostgreSQL
+#
+## @param postgresql.enabled Enable PostgreSQL
+## @param postgresql.global.postgresql.postgresqlDatabase PostgreSQL database (overrides postgresqlDatabase)
+## @param postgresql.global.postgresql.postgresqlUsername PostgreSQL username (overrides postgresqlUsername)
+## @param postgresql.global.postgresql.postgresqlPassword PostgreSQL admin password (overrides postgresqlPassword)
+## @param postgresql.global.postgresql.servicePort PostgreSQL port (overrides service.port)
+## @param postgresql.persistence.size PVC Storage Request for PostgreSQL volume
+
+postgresql:
+  enabled: false
+#  global:
+#    postgresql:
+#      postgresqlDatabase: gitea
+#      postgresqlUsername: root
+#      postgresqlPassword: ninox123
+#  persistence:
+#    storageClass: local-path
+#    size: 10Gi
+#  requests:
+#    hugepages-2Mi: 1000Mi
+#    memory: 1000Mi
+#    cpu: 1000m
+
+
+## @section MariaDB
+#
+## @param mariadb.enabled Enable MariaDB
+## @param mariadb.auth.database Name of the database to create.
+## @param mariadb.auth.username Username of the new user to create.
+## @param mariadb.auth.password Password for the new user. Ignored if existing secret is provided
+## @param mariadb.auth.rootPassword Password for the root user.
+## @param mariadb.primary.service.port Port to connect to MariaDB service
+## @param mariadb.primary.persistence.size Persistence size for MariaDB
+mariadb:
+  enabled: true
+  auth:
+    database: gitea
+    username: gitea
+    password: gitea
+    rootPassword: gitea
+  primary:
+    #service:
+    #  port: 3306
+    persistence:
+      size: 10Gi
+      storageClass: maya-stor #local-path #maya-stor
+
+resources:
+  requests: 
+    #hugepages-2Mi: 1000Mi
+    memory: 200Mi
+    cpu: 200m
+  limits:
+    #hugepages-2Mi: 1000Mi
+    memory: 1000Mi
+    cpu: 1000m
+
+ingress:
+  enabled: true
+  #className: nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  hosts:
+    - host: gitea.ninox.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+  - hosts:
+      - gitea.ninox.com
+    secretName: ingress-cert-tls
+
+service:
+  http:
+    type: ClusterIP
+    port: 3000
+    clusterIP: 10.111.1.21
+    #loadBalancerIP:
+    #nodePort:
+    #externalTrafficPolicy:
+    #externalIPs:
+    #ipFamilyPolicy:
+    #ipFamilies:
+    loadBalancerSourceRanges: []
+    annotations:
+
+gitea:
+  config:
+    webhook:
+      ALLOWED_HOST_LIST: "*"
+      SKIP_TLS_VERIFY: "true"

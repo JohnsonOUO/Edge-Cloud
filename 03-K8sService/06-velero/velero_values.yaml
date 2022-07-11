@@ -1,0 +1,47 @@
+image:
+  repository: velero/velero
+  tag: v1.8.1
+
+# 对应 --use-restic参数
+deployRestic: true
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1000Mi
+  requests:
+     cpu: 200m
+     memory: 200Mi
+
+
+restic:
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1000Mi
+    requests:
+      cpu: 200m
+      memory: 200Mi
+
+
+snapshotsEnabled: false
+configuration:
+  provider: aws
+  backupStorageLocation:
+    # name建议使用default，如果设置为其它值，如aws，创建备份用下面的命令
+    # velero backup create abc1 --storage-location aws
+    # 默认velero使用名为default的storage-location
+    name: default
+    bucket: ninoxtest
+    config:
+      region: tw-001
+      s3ForcePathStyle: true
+      s3Url: https://tw-001.s3.synologyc2.net
+
+initContainers:
+   - name: velero-plugin-for-aws
+     image: velero/velero-plugin-for-aws:v1.4.0
+     imagePullPolicy: IfNotPresent
+     volumeMounts:
+       - mountPath: /target
+         name: plugins

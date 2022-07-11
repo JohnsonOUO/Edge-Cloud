@@ -1,0 +1,244 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: device-connector-workflow
+  namespace: workflows
+spec:
+  entrypoint: pipeline
+  # volumeClaimTemplates:
+  # - metadata:
+  #     name: maven-repo
+  #   spec:
+  #     storageClassName: local-path
+  #     accessModes: [ "ReadWriteOnce" ]
+  #     resources:
+  #       requests:
+  #         storage: 10Gi
+  volumes:
+  - name: dind-storage
+    emptyDir: {}
+  - name: dind-socket
+    emptyDir: {}
+  - name: maven-repo
+    emptyDir: {}
+    # persistentVolumeClaim:
+    #   claimName: maven-artifact-pvc
+  - name: kaniko-secret
+    secret:
+      secretName: harbor-registry-secret
+      items:
+        - key: .dockerconfigjson
+          path: config.json
+  templates:
+  - name: pipeline
+    dag:
+      tasks:
+      - name: build-and-test-hono
+        templateRef:
+          name: java-compiletest-with-sidecar
+          template: compile-test
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: hono-service
+      - name: package-hono
+        depends: "build-and-test-hono"
+        templateRef:
+          name: java-package
+          template: compile-package
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: hono-service
+      - name: build-image-hono
+        depends: "package-hono"
+        templateRef:
+          name: build-image
+          template: build-kaniko-git
+          clusterScope: true
+        arguments:
+          parameters:
+            # - name: app_repo
+            #   value: http://gitea-http.gitea.svc.cluster.local:3000/root/device-homeomorphisx.git
+            - name: service
+              value: hono-service
+            - name: container_image
+              value: harbor-core.harbor-system.svc.cluster.local/library/hono-service
+            - name: container_tag
+              value: 0.1-SNAPSHOT
+      - name: build-and-test-observability
+        templateRef:
+          name: java-compiletest-with-sidecar
+          template: compile-test
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: observability-connector-service
+      - name: package-observability
+        depends: "build-and-test-observability"
+        templateRef:
+          name: java-package
+          template: compile-package
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: observability-connector-service
+      - name: build-image-observability
+        depends: "package-observability"
+        templateRef:
+          name: build-image
+          template: build-kaniko-git
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: observability-connector-service
+            - name: container_image
+              value: harbor-core.harbor-system.svc.cluster.local/library/observability-connector
+            - name: container_tag
+              value: 0.1-SNAPSHOT
+      - name: build-and-test-identity
+        templateRef:
+          name: java-compiletest-with-sidecar
+          template: compile-test
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: identity-access-control-service
+      - name: package-identity
+        depends: "build-and-test-identity"
+        templateRef:
+          name: java-package
+          template: compile-package
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: identity-access-control-service
+      - name: build-image-identity
+        depends: "package-identity"
+        templateRef:
+          name: build-image
+          template: build-kaniko-git
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: identity-access-control-service
+            - name: container_image
+              value: harbor-core.harbor-system.svc.cluster.local/library/iam-service
+            - name: container_tag
+              value: 0.1-SNAPSHOT
+      - name: build-and-test-device
+        templateRef:
+          name: java-compiletest-with-sidecar
+          template: compile-test
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: device-simulator
+      - name: package-device
+        depends: "build-and-test-device"
+        templateRef:
+          name: java-package
+          template: compile-package
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: device-simulator
+      - name: build-and-test-activity
+        templateRef:
+          name: java-compiletest-with-sidecar
+          template: compile-test
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: activity-service
+      - name: package-activity
+        depends: "build-and-test-activity"
+        templateRef:
+          name: java-package
+          template: compile-package
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: activity-service
+      - name: build-image-activity
+        depends: "package-activity"
+        templateRef:
+          name: build-image
+          template: build-kaniko-git
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: activity-service
+            - name: container_image
+              value: harbor-core.harbor-system.svc.cluster.local/library/activity-service
+            - name: container_tag
+              value: 0.1-SNAPSHOT
+      - name: build-and-test-gateway
+        templateRef:
+          name: java-compiletest-with-sidecar
+          template: compile-test
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: gateway-api
+      - name: package-gateway
+        depends: "build-and-test-gateway"
+        templateRef:
+          name: java-package
+          template: compile-package
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: gateway-api
+      - name: build-image-gateway
+        depends: "package-gateway"
+        templateRef:
+          name: build-image
+          template: build-kaniko-git
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: gateway-api
+            - name: container_image
+              value: harbor-core.harbor-system.svc.cluster.local/library/gateway-api
+            - name: container_tag
+              value: 0.1-SNAPSHOT
+      - name: package-webapp
+        templateRef:
+          name: java-package
+          template: compile-package
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: user-webapp
+      - name: build-image-webapp
+        depends: "package-webapp"
+        templateRef:
+          name: build-image
+          template: build-kaniko-git
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: user-webapp
+            - name: container_image
+              value: harbor-core.harbor-system.svc.cluster.local/library/user-webapp
+            - name: container_tag
+              value: 0.1-SNAPSHOT

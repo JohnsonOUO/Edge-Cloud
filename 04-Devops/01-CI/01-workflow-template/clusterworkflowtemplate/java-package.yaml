@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterWorkflowTemplate
+metadata:
+  name: java-package
+spec:
+  volumes:
+  - name: maven-repo
+    persistentVolumeClaim:
+      claimName: maven-artifact-pvc
+  artifactRepositoryRef:
+    configMap: artifact-repositories
+    key: default-v1
+  templates:
+  - name: compile-package
+    inputs:
+      parameters:
+      - name: service
+      artifacts:
+      - name: gitsource
+        path: /src/
+        git:
+          repo: http://gitea-http.gitea.svc.cluster.local:3000/root/TestPush.git
+          usernameSecret:
+            name: gitea-general
+            key: username
+          passwordSecret:
+            name: gitea-general
+            key: token
+    container:
+      image: maven:3.8.4-openjdk-11
+      command: [/usr/bin/mvn]
+      args:
+      #- -Dmaven.repo.local=/var/maven
+      #- -Dmaven.test.skip=true
+      - package
+      #- install:install-file
+      #- -Dfile={{inputs.parameters.service}}/target/{{inputs.parameters.service}}-1.0-SNAPSHOT-all.jar
+      #- -DgroupId=org.ninox
+      #- -DartifactId={{inputs.parameters.service}}
+      #- -Dversion=1.0-SNAPSHOT
+      #- -Dpackaging=jar
+      #- -pl={{inputs.parameters.service}}
+      #- -am
+      #- -DlocalRepositoryPath=/var/maven
+      env:
+        - name: ENV_TYPE
+          value: dev
+        - name: REACT_APP_ENV_TYPE
+          value: dev
+      volumeMounts:
+        - name: maven-repo
+          mountPath: /var/mnt/extra
+      workingDir: /src

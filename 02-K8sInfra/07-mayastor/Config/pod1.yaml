@@ -1,0 +1,19 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: fio1
+spec:
+  nodeSelector:
+    openebs.io/engine: mayastor
+  volumes:
+    - name: ms-volume1
+      persistentVolumeClaim:
+        claimName: ms-volume-claim1
+  containers:
+    - name: fio1
+      image: nixery.dev/shell/fio
+      command: ["touch"]
+      args: ["/volume/out-restore.txt;"]
+      volumeMounts:
+        - mountPath: "/volume"
+          name: ms-volume1

@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero
+  namespace: velero
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/manifest-generate-paths: .
+spec:
+  project: system
+  destination:
+    namespace: velero
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+  source:
+    #path: 
+    repoURL: https://vmware-tanzu.github.io/helm-charts
+    targetRevision: 2.30.1
+      # helm specific config
+    chart: velero  # Set this when pulling directly from a Helm repo. DO NOT set for git-hosted Helm charts.
+    helm:
+      values: |
+        image:
+          repository: velero/velero
+          tag: v1.8.1
+
+        # 对应 --use-restic参数
+        deployRestic: true
+
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1000Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+
+
+        restic:
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1000Mi
+            requests:
+              cpu: 200m
+              memory: 200Mi
+
+
+        snapshotsEnabled: false
+        configuration:
+          provider: aws
+          backupStorageLocation:
+            name: default
+            bucket: ninoxtest
+            config:
+              region: tw-001
+              s3ForcePathStyle: true
+              s3Url: https://tw-001.s3.synologyc2.net
+
+        initContainers:
+          - name: velero-plugin-for-aws
+            image: velero/velero-plugin-for-aws:v1.4.0
+            imagePullPolicy: IfNotPresent
+            volumeMounts:
+              - mountPath: /target
+                name: plugins
+                
+      releaseName: velero
+      version: v3

@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: gitea-divice-connector
+spec:
+  service:
+    metadata:
+      name: gitea-device-connector
+    ports:
+      - port: 12000
+        targetPort: 12000
+  webhook:
+    device-connector-app:
+        endpoint: /
+        port: "12000"
+        method: POST

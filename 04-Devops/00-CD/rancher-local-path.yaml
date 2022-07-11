@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rancher-local-path-sc
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/manifest-generate-paths: .
+spec:
+  project: system
+  source:
+    path: 08-rancher-local-path-provisioner
+    repoURL: http://gitea-http.gitea.svc.cluster.local:3000/root/cloud-system-deployment.git
+    targetRevision: HEAD
+  destination:
+    namespace: local-path-storage
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true

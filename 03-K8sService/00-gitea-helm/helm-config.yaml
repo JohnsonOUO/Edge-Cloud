@@ -1,0 +1,57 @@
+persistence:
+  enabled: true
+  storageClass: "maya-stor"
+
+postgresql:
+    persistence:
+      enabled: true
+      storageClass: "maya-stor"
+    requests:
+      hugepages-2Mi: 1000Mi
+      memory: 1000Mi
+      cpu: 1000m
+
+resources:
+  requests: 
+    hugepages-2Mi: 200Mi
+    memory: 200Mi
+    cpu: 200m
+  limits:
+    hugepages-2Mi: 1000Mi
+    memory: 1000Mi
+    cpu: 1000m
+
+ingress:
+  enabled: true
+  #className: nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  hosts:
+    - host: gitea.ninox.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+  - hosts:
+      - gitea.ninox.com
+    secretName: ingress-cert-tls
+
+service:
+  http:
+    type: ClusterIP
+    port: 3000
+    clusterIP: 10.111.1.21
+    #loadBalancerIP:
+    #nodePort:
+    #externalTrafficPolicy:
+    #externalIPs:
+    #ipFamilyPolicy:
+    #ipFamilies:
+    loadBalancerSourceRanges: []
+    annotations:
+
+gitea:
+  config:
+    webhook:
+      ALLOWED_HOST_LIST: "*"
+      SKIP_TLS_VERIFY: "true"

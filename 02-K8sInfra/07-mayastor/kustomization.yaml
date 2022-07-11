@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: mayastor
+resources:
+- Deploy/ns.yaml
+#
+- Deploy/ApplicationResource/rbac.yaml
+- Deploy/ApplicationResource/resourcedefinition.yaml
+#
+- Deploy/Dependency/localpv.yaml
+- Deploy/Dependency/nat.yaml
+- Deploy/Dependency/statefulset.yaml
+- Deploy/Dependency/svc.yaml
+- Deploy/Dependency/svc-headless.yaml
+#
+- Deploy/Component/control-plane-core.yaml
+- Deploy/Component/csi-deamon.yaml
+- Deploy/Component/csi-controller-deployment.yaml
+- Deploy/Component/data-plane.yaml
+- Deploy/Component/msp.yaml
+- Deploy/Component/rest-deployment.yaml
+- Deploy/Component/rest-svc.yaml
+#
+#- Config/basic/msp1.yaml
+#- Config/basic/msp2.yaml
+#- Config/basic/msp3.yaml
+#- msp4.yaml
+#- Config/basic/sc.yaml

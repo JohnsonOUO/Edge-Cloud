@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterWorkflowTemplate
+metadata:
+  name: build-image
+spec:
+  templates:
+  - name: build-kaniko-git
+    inputs:
+      parameters:
+      - name: service
+      - name: container_image
+      - name: container_tag
+      artifacts:
+      - name: gitsource
+        path: /workspace/
+        git:
+          repo: http://gitea-http.gitea.svc.cluster.local:3000/root/TestPush.git
+          usernameSecret:
+            name: gitea-general
+            key: username
+          passwordSecret:
+            name: gitea-general
+            key: token
+    container:
+      image: gcr.io/kaniko-project/executor:debug
+      command: [/kaniko/executor]
+      args:
+      - '--dockerfile=/workspace/Dockerfile'
+      - '--context=./'
+      #- '--build-arg=JARFILE={{inputs.parameters.service}}/1.0-SNAPSHOT/{{inputs.parameters.service}}-1.0-SNAPSHOT.jar'
+      - '--destination={{inputs.parameters.container_image}}:{{inputs.parameters.container_tag}}'
+      #- '--destination=chriskewis/testpush:1.0.0' work!
+      - '--skip-tls-verify'
+      volumeMounts:
+        - name: kaniko-secret
+          mountPath: /kaniko/.docker/
+        - name: maven-repo
+          mountPath: /var/maven

@@ -1,0 +1,65 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: device-connector-workflow
+  namespace: workflows
+spec:
+  entrypoint: pipeline
+  # volumeClaimTemplates:
+  # - metadata:
+  #     name: maven-repo
+  #   spec:
+  #     storageClassName: local-path
+  #     accessModes: [ "ReadWriteOnce" ]
+  #     resources:
+  #       requests:
+  #         storage: 10Gi
+  volumes:
+  - name: maven-repo
+    persistentVolumeClaim:
+      claimName: maven-artifact-pvc
+  - name: kaniko-secret
+    secret:
+      secretName: harbor-core-secret #dockerhub-secret
+      items:
+        - key: .dockerconfigjson
+          path: config.json
+  templates:
+  - name: pipeline
+    dag:
+      tasks:
+      - name: build-and-test-hono
+        templateRef:
+          name: java-compiletest-with-sidecar
+          template: compile-test
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: hono-service
+      - name: package-hono
+        depends: "build-and-test-hono"
+        templateRef:
+          name: java-package
+          template: compile-package
+          clusterScope: true
+        arguments:
+          parameters:
+            - name: service
+              value: hono-service
+      - name: build-image-hono
+        depends: "package-hono"
+        templateRef:
+          name: build-image
+          template: build-kaniko-git
+          clusterScope: true
+        arguments:
+          parameters:
+            # - name: app_repo
+            #   value: http://gitea-http.gitea.svc.cluster.local:3000/root/device-homeomorphisx.git
+            - name: service
+              value: hono-service
+            - name: container_image
+              value: harbor-core.harbor-system.svc.cluster.local/library/hono-service #chriskewis/testpush1
+            - name: container_tag
+              value: 1.1-SNAPSHOT

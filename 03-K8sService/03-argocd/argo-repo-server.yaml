@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: repo-server
+    app.kubernetes.io/name: argocd-repo-server
+    app.kubernetes.io/part-of: argocd
+  name: argocd-repo-server
+spec:
+  replicas: 1 # TODO: will need to remove for scaling
+  template:
+    spec:
+      volumes:
+        - name: tmp
+          emptyDir: null
+          persistentVolumeClaim:
+            claimName: argo-repo-tmp

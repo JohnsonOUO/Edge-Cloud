@@ -1,0 +1,156 @@
+expose:
+  # Set how to expose the service. Set the type as "ingress", "clusterIP", "nodePort" or "loadBalancer"
+  # and fill the information in the corresponding section
+  type: ingress
+  tls:
+    enabled: true
+    # The source of the tls certificate. Set as "auto", "secret"
+    # or "none" and fill the information in the corresponding section
+    # 1) auto: generate the tls certificate automatically
+    # 2) secret: read the tls certificate from the specified secret.
+    # The tls certificate can be generated manually or by cert manager
+    # 3) none: configure no tls certificate for the ingress. If the default
+    # tls certificate is configured in the ingress controller, choose this option
+    certSource: secret
+    auto:
+      # The common name used to generate the certificate, it's necessary
+      # when the type isn't "ingress"
+      commonName: ""
+    secret:
+      # The name of secret which contains keys named:
+      # "tls.crt" - the certificate
+      # "tls.key" - the private key
+      secretName: "ingress-cert-tls"
+      # The name of secret which contains keys named:
+      # "tls.crt" - the certificate
+      # "tls.key" - the private key
+      # Only needed when the "expose.type" is "ingress".
+      notarySecretName: "ingress-cert-tls"
+  ingress:
+    hosts:
+      core: harbor.ninox.com
+      notary: notary-harbor.ninox.com
+    annotations:
+      # note different ingress controllers may require a different ssl-redirect annotation
+      # for Envoy, use ingress.kubernetes.io/force-ssl-redirect: "true" and remove the nginx lines below
+      kubernetes.io/ingress.class: "nginx"
+      ingress.kubernetes.io/ssl-redirect: "true"
+      ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+
+externalURL: https://harbor-core.harbor-system.svc.cluster.local #https://harbor.ninox.com
+
+persistence:
+  enabled: true
+  # Setting it to "keep" to avoid removing PVCs during a helm delete
+  # operation. Leaving it empty will delete PVCs after the chart deleted
+  # (this does not apply for PVCs that are created for internal database
+  # and redis components, i.e. they are never deleted automatically)
+  resourcePolicy: "keep"
+  persistentVolumeClaim:
+    registry:
+      # Use the existing PVC which must be created manually before bound,
+      # and specify the "subPath" if the PVC is shared with other components
+      existingClaim: ""
+      # Specify the "storageClass" used to provision the volume. Or the default
+      # StorageClass will be used (the default).
+      # Set it to "-" to disable dynamic provisioning
+      storageClass: "maya-stor"
+      # subPath: """
+      accessMode: ReadWriteOnce
+      size: 1Gi #5
+      annotations: {}
+    chartmuseum:
+      existingClaim: ""
+      storageClass: "maya-stor"
+      #subPath: "harbor/chartmuseum"
+      accessMode: ReadWriteOnce
+      size: 1Gi #5
+      annotations: {}
+    jobservice:
+      existingClaim: ""
+      storageClass: "maya-stor"
+      #subPath: "harbor/jobservice"
+      accessMode: ReadWriteOnce
+      size: 1Gi
+      annotations: {}
+    # If external database is used, the following settings for database will
+    # be ignored
+    database:
+      existingClaim: ""
+      storageClass: "maya-stor"
+      #subPath: "harbor/database"
+      accessMode: ReadWriteOnce
+      size: 1Gi
+      annotations: {}
+    # If external Redis is used, the following settings for Redis will
+    # be ignored
+    redis:
+      existingClaim: ""
+      storageClass: "maya-stor"
+      #subPath: "harbor/redis"
+      accessMode: ReadWriteOnce
+      size: 1Gi
+      annotations: {}
+    trivy:
+      existingClaim: ""
+      storageClass: "maya-stor"
+      #subPath: "harbor/trivy"
+      accessMode: ReadWriteOnce
+      size: 1Gi # 5
+      annotations: {}
+
+database:
+  type: internal
+  internal:
+    # set the service account to be used, default if left empty
+    serviceAccountName: ""
+    # mount the service account token
+    automountServiceAccountToken: false
+    image:
+      repository: chriskewis/postgresql-off
+      #tag: latest
+    # The initial superuser password for internal database
+    password: "harbor"
+    # The size limit for Shared memory, pgSQL use it for shared_buffer
+    # More details see:
+    # https://github.com/goharbor/harbor/issues/15034
+    shmSizeLimit: 512Mi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    ## The priority class to run the pod as
+    priorityClassName:
+    initContainer:
+      migrator: 
+        resources:
+          requests:
+          #  hugepages-2Mi: 1000Mi
+            memory: 200Mi
+            cpu: 512m
+          limits:
+          #  hugepages-2Mi: 10Mi
+            memory: 1Gi
+            cpu: 1
+      permissions:
+        resources:
+          requests:
+            hugepages-2Mi: 1000Mi
+            memory: 200Mi
+            cpu: 512m
+          limits:
+            hugepages-2Mi: 10Mi
+            memory: 1Gi
+            cpu: 1
+
+resources:
+  requests:
+    #hugepages-2Mi: 1000Mi
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    #hugepages-2Mi: 10Mi
+    cpu: 1
+    memory: 1Gi
+# harborAdminPassword: "admin123"
