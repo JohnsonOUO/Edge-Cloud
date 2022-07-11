@@ -43,4 +43,4 @@ Local Path Provisioner : v0.0.22
 Metallb : v0.12.1
 
 ## Set up
-follow 00~08 folders and see the readme.
+follow 00~07 folders and see the readme.
